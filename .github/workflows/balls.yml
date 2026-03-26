@@ -1,0 +1,60 @@
+name: balls
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - containers/**
+      - .github/workflows/actions.yml
+      - "*.sh"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - containers/**
+      - .github/workflows/actions.yml
+      - "*.sh"
+  workflow_dispatch:
+jobs:
+  qemu-user-static:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: 10.0.8-1
+      ORIGIN_VERSION: 10.0.8
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set variables
+        run: |
+          echo "DOCKER_REPO=docker.io/$GITHUB_REPOSITORY" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          base_url=http://ftp.de.debian.org/debian/pool/main/q/qemu/
+          file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
+          wget --content-disposition ${base_url}${file_name}
+          dpkg-deb -R qemu-user*.deb releases
+          ./run.sh -t "${{ env.VERSION }}" -r "${{ env.GITHUB_REPOSITORY }}" -d "${{ env.DOCKER_REPO }}"
+      - name: list images
+        run: docker images
+      - name: Test
+        run: ./test.sh -d "${{ env.DOCKER_REPO }}"
+      - name: Publish
+        if: github.ref == 'refs/heads/master'
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_TOKEN }}
+          docker push --all-tags ${{ env.DOCKER_REPO }}
+      - name: Create Release
+        if: github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          name: "v${{ env.VERSION }}"
+          tag: "v${{ env.VERSION }}"
+          body: |
+            # `qemu-*-static` @ ${{ env.VERSION }}
+          artifacts: "releases/usr/bin/*.tar.gz,releases/usr/bin/qemu-*-static"
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
