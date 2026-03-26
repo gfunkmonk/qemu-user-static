@@ -23,8 +23,8 @@ jobs:
   qemu-user-static:
     runs-on: ubuntu-latest
     env:
-      VERSION: 10.0.8-1
-      ORIGIN_VERSION: 10.0.8+ds-0+deb13u1+b1
+      VERSION: 8.2.2-1
+      ORIGIN_VERSION: 8.2.2+ds-0ubuntu1.14
     steps:
       - uses: actions/checkout@v4
       - name: Set variables
@@ -32,7 +32,7 @@ jobs:
           echo "DOCKER_REPO=docker.io/$GITHUB_REPOSITORY" >> $GITHUB_ENV
       - name: Build
         run: |
-          base_url=http://ftp.de.debian.org/debian/pool/main/q/qemu/
+          base_url=https://archive.ubuntu.com/ubuntu/pool/universe/q/qemu/
           file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
           wget --content-disposition ${base_url}${file_name}
           dpkg-deb -R qemu-user*.deb releases
