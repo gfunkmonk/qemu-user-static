@@ -57,6 +57,12 @@ do
             if [ ! -f "${releases_dir}qemu-${to_arch}-static" ] && [ -f "${releases_dir}qemu-${to_arch}" ];then
                 cp "${releases_dir}qemu-${to_arch}" "${releases_dir}qemu-${to_arch}-static"
             fi
+            # Skip this arch if the static binary couldn't be created
+            # (e.g. qemu-${to_arch} was a broken symlink or is missing)
+            if [ ! -f "${releases_dir}qemu-${to_arch}-static" ]; then
+                rm -rf "${work_dir}"
+                continue
+            fi
             cp -p "${releases_dir}qemu-${to_arch}-static" ${work_dir}/
             cp -p "${work_dir}/qemu-${to_arch}-static" "${out_dir}/latest/"
             cat > ${work_dir}/Dockerfile -<<EOF
