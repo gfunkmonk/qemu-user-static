@@ -22,8 +22,8 @@ jobs:
   qemu-user-static:
     runs-on: ubuntu-latest
     env:
-      VERSION: 10.0.6-1
-      ORIGIN_VERSION: 10.0.6
+      VERSION: 10.0.8-1
+      ORIGIN_VERSION: 10.0.8
     steps:
       - uses: actions/checkout@v2
       - name: Set variables
