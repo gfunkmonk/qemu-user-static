@@ -33,9 +33,10 @@ jobs:
       - name: Build
         run: |
           base_url=https://archive.ubuntu.com/ubuntu/pool/universe/q/qemu/
-          file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
+          file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user-static_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
           wget --content-disposition ${base_url}${file_name}
-          dpkg-deb -R qemu-user*.deb releases
+          dpkg-deb -R qemu-user-static*.deb releases
+          for f in releases/usr/bin/qemu-*-static; do mv "$f" "${f%-static}"; done
           ./run.sh -t "${{ env.VERSION }}" -r "${{ env.GITHUB_REPOSITORY }}" -d "${{ env.DOCKER_REPO }}"
       - name: list images
         run: docker images
