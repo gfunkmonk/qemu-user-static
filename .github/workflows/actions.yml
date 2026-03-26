@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: 10.0.8-1
-      ORIGIN_VERSION: 10.0.8
+      ORIGIN_VERSION: 10.0.8+ds-0+deb13u1+b1
     steps:
       - uses: actions/checkout@v4
       - name: Set variables
