@@ -36,7 +36,14 @@ jobs:
           file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user-static_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
           wget --content-disposition ${base_url}${file_name}
           dpkg-deb -R qemu-user-static*.deb releases
-          for f in releases/usr/bin/qemu-*-static; do mv "$f" "${f%-static}"; done
+          for f in releases/usr/bin/qemu-*-static; do
+            if [ -L "$f" ]; then
+              ln -sf "$(readlink "$f" | sed 's/-static$//')" "${f%-static}"
+              rm "$f"
+            else
+              mv "$f" "${f%-static}"
+            fi
+          done
           ./run.sh -t "${{ env.VERSION }}" -r "${{ env.GITHUB_REPOSITORY }}" -d "${{ env.DOCKER_REPO }}"
       - name: list images
         run: docker images
