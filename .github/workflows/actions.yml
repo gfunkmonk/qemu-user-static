@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: 8.2.2-1
-      ORIGIN_VERSION: 8.2.2+ds-0ubuntu1.14
+      ORIGIN_VERSION: 8.2.2+ds-0ubuntu1.16
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set variables
         run: |
           echo "DOCKER_REPO=docker.io/$GITHUB_REPOSITORY" >> $GITHUB_ENV
