@@ -1,0 +1,59 @@
+name: Check for New qemu-user Version
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch: # Allows you to manually trigger a check
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest qemu-user version
+        id: qemu_check
+        run: |
+          base_url=http://ftp.us.debian.org/debian/pool/main/q/qemu/
+          file_name=$(curl -sSL "$base_url" | grep -Po '>\Kqemu-user_[^"]+_amd64\.deb' | sort -V | tail -n1)
+          origin_version=$(echo "$file_name" | sed -E 's/^qemu-user_(.+)_amd64\.deb$/\1/')
+          # Derive our own tag version from the upstream version, e.g.
+          # "11.0.2+ds-2" -> "11.0.2-1"
+          tag_version="${origin_version%%+*}-1"
+          echo "origin_version=$origin_version" >> "$GITHUB_OUTPUT"
+          echo "tag_version=$tag_version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag exists
+        id: tag_check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = "v${{ steps.qemu_check.outputs.tag_version }}";
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tag
+              });
+              core.setOutput("exists", "true");
+            } catch (e) {
+              core.setOutput("exists", "false");
+            }
+
+      - name: Trigger Build Workflow
+        if: steps.tag_check.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'actions.yml',
+              ref: 'master',
+              inputs: {
+                version: "${{ steps.qemu_check.outputs.tag_version }}",
+                origin_version: "${{ steps.qemu_check.outputs.origin_version }}"
+              }
+            });
