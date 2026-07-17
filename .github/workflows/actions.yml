@@ -4,20 +4,6 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - containers/**
-      - .github/workflows/actions.yml
-      - "*.sh"
-  pull_request:
-    branches:
-      - master
-    paths:
-      - containers/**
-      - .github/workflows/actions.yml
-      - "*.sh"
   workflow_dispatch:
 jobs:
   qemu-user-static:

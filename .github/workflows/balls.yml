@@ -4,27 +4,13 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - containers/**
-      - .github/workflows/balls.yml
-      - "*.sh"
-  pull_request:
-    branches:
-      - master
-    paths:
-      - containers/**
-      - .github/workflows/balls.yml
-      - "*.sh"
   workflow_dispatch:
 jobs:
   qemu-user-static:
     runs-on: ubuntu-latest
     env:
-      VERSION: 10.0.8-1
-      ORIGIN_VERSION: 10.0.8
+      VERSION: 10.0.11-1
+      ORIGIN_VERSION: 10.0.11+ds-0+deb13u1
     steps:
       - uses: actions/checkout@v7
       - name: Set variables
@@ -32,10 +18,18 @@ jobs:
           echo "DOCKER_REPO=docker.io/$GITHUB_REPOSITORY" >> $GITHUB_ENV
       - name: Build
         run: |
-          base_url=http://ftp.de.debian.org/debian/pool/main/q/qemu/
-          file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
+          base_url=http://ftp.us.debian.org/debian/pool/main/q/qemu/
+          file_name=$(curl -sSL $base_url | grep -Po '>\Kqemu-user-static_.+amd64.deb' | grep -m1 -F ${{ env.ORIGIN_VERSION }} )
           wget --content-disposition ${base_url}${file_name}
-          dpkg-deb -R qemu-user*.deb releases
+          dpkg-deb -R qemu-user-static*.deb releases
+          for f in releases/usr/bin/qemu-*-static; do
+            if [ -L "$f" ]; then
+              ln -sf "$(readlink "$f" | sed 's/-static$//')" "${f%-static}"
+              rm "$f"
+            else
+              mv "$f" "${f%-static}"
+            fi
+          done
           ./run.sh -t "${{ env.VERSION }}" -r "${{ env.GITHUB_REPOSITORY }}" -d "${{ env.DOCKER_REPO }}"
       - name: list images
         run: docker images
@@ -50,7 +44,6 @@ jobs:
       - name: Publish
         if: github.ref == 'refs/heads/master'
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_TOKEN }}
           docker push --all-tags ${{ env.DOCKER_REPO }}
       - name: Create Release
         if: github.ref == 'refs/heads/master'
