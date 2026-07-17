@@ -23,7 +23,7 @@ fi
 
 # It should register binfmt_misc entry with 'flags: F'
 # by given "-p yes" option.
-docker run --rm --privileged ${DOCKER_REPO} --reset -p yes
+docker run --rm --privileged "${DOCKER_REPO}" --reset -p yes
 cat /proc/sys/fs/binfmt_misc/qemu-aarch64
 grep -q '^flags: F$' /proc/sys/fs/binfmt_misc/qemu-aarch64
 
@@ -53,7 +53,7 @@ docker run --rm -t --platform arm64 arm64v8/fedora uname -m
 
 # It should register binfmt_misc entry with 'flags: '
 # by given no "-p yes" option.
-docker run --rm --privileged ${DOCKER_REPO}:register --reset
+docker run --rm --privileged "${DOCKER_REPO}":register --reset
 cat /proc/sys/fs/binfmt_misc/qemu-aarch64
 grep -q '^flags: $' /proc/sys/fs/binfmt_misc/qemu-aarch64
 
@@ -62,8 +62,8 @@ grep -q '^flags: $' /proc/sys/fs/binfmt_misc/qemu-aarch64
 # zhangguanzhang/qemu-user-static:$from_arch-$to_arch image
 
 # /usr/bin/qemu-aarch64-static should be included.
-docker run --rm -t ${DOCKER_REPO}:aarch64 /usr/bin/qemu-aarch64-static --version
-docker run --rm -t ${DOCKER_REPO}:x86_64-aarch64 /usr/bin/qemu-aarch64-static --version
+docker run --rm -t "${DOCKER_REPO}":aarch64 /usr/bin/qemu-aarch64-static --version
+docker run --rm -t "${DOCKER_REPO}":x86_64-aarch64 /usr/bin/qemu-aarch64-static --version
 
 # ------------------------------------------------
 # Integration test
