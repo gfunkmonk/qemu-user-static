@@ -5,12 +5,21 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Docker tag version (e.g. 11.0.2-1)"
+        required: false
+        default: "11.0.2-1"
+      origin_version:
+        description: "Upstream qemu-user Debian package version to match"
+        required: false
+        default: "11.0.2+ds-2"
 jobs:
   qemu-user-static:
     runs-on: ubuntu-latest
     env:
-      VERSION: 11.0.2-1
-      ORIGIN_VERSION: 11.0.2+ds-2
+      VERSION: ${{ inputs.version }}
+      ORIGIN_VERSION: ${{ inputs.origin_version }}
     steps:
       - uses: actions/checkout@v7
       - name: Set variables
